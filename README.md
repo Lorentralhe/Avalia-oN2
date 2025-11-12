@@ -16,19 +16,20 @@ A arquitetura é totalmente serverless e permite processamento assíncrono das r
 
 ### 🧠 Diagrama da Arquitetura
 
-![Arquitetura](.doc/Arquitetura.png)
+![Arquitetura](./doc/Arquitetura.png)
 
-> Coloque um arquivo `diagram.png` com a imagem do diagrama nesta pasta ✨
+> Certifique-se de colocar a imagem dentro da pasta `doc` com o mesmo nome ✨
 
 ---
 
 ## 📂 Estrutura do Projeto
 
+```bash
 /troca-celular-app
-├── src
-│ ├── api_handler
-│ │ └── app.py
-│ └── processor
-│ └── app.py
-├── template.yaml
-└── README.md
+ ├── src
+ │   ├── api_handler
+ │   │   └── app.py
+ │   └── processor
+ │       └── app.py
+ ├── template.yaml
+ └── README.md
