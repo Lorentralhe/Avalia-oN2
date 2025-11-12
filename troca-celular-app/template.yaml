@@ -43,6 +43,8 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref ExchangeTable
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt ExchangeQueue.QueueName
       Events:
         ApiEvent:
           Type: Api
@@ -57,7 +59,8 @@ Resources:
       Handler: app.handler
       CodeUri: src/processor/
       Policies:
-        - SNSPublishMessagePolicy: {}
+        - SNSPublishMessagePolicy:
+            TopicName: !Ref ExchangeTopic
         - DynamoDBCrudPolicy:
             TableName: !Ref ExchangeTable
       Environment:
