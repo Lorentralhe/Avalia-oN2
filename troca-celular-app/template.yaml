@@ -9,7 +9,6 @@ Globals:
       Variables:
         PYTHON_EXEC: "/usr/bin/python3.11"
 
-
 Resources:
   ExchangeQueue:
     Type: AWS::SQS::Queue
@@ -66,11 +65,24 @@ Resources:
             TopicName: !Ref ExchangeTopic
         - DynamoDBCrudPolicy:
             TableName: !Ref ExchangeTable
+        
+        # ✅ PERMISSÃO PARA LER SQS
+        - PolicyName: SQSAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt ExchangeQueue.Arn
+      
       Environment:
         Variables:
           TOPIC_ARN: !Ref ExchangeTopic
           DDB_TABLE: !Ref ExchangeTable
-      Events: {}
+          QUEUE_URL: !Ref ExchangeQueue
 
   ProcessorEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
