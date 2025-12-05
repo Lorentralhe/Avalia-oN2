@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Loja de Troca de Celulares - SAM
+Globals:
+  Function:
+    Runtime: python3.11
+    Environment:
+      Variables:
+        PYTHON_EXEC: /usr/bin/python3.11
+Resources:
+  ExchangeQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ExchangeRequestsQueue
+  ExchangeTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ExchangeNotificationsTopic
+  ExchangeTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ExchangeRequestsTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+  ApiHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: api-handler-exchange
+      Handler: app.handler
+      CodeUri: ApiHandlerFunction
+      Environment:
+        Variables:
+          QUEUE_URL:
+            Ref: ExchangeQueue
+          DDB_TABLE:
+            Ref: ExchangeTable
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ExchangeTable
+      - SQSSendMessagePolicy:
+          QueueName:
+            Fn::GetAtt:
+            - ExchangeQueue
+            - QueueName
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /trocas
+            Method: post
+    Metadata:
+      SamResourceId: ApiHandlerFunction
+  ProcessorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: processor-exchange
+      Handler: app.handler
+      CodeUri: ProcessorFunction
+      Policies:
+      - SNSPublishMessagePolicy:
+          TopicName:
+            Ref: ExchangeTopic
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: ExchangeTable
+      Environment:
+        Variables:
+          TOPIC_ARN:
+            Ref: ExchangeTopic
+          DDB_TABLE:
+            Ref: ExchangeTable
+      Events: {}
+    Metadata:
+      SamResourceId: ProcessorFunction
+  ProcessorEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn:
+        Fn::GetAtt:
+        - ExchangeQueue
+        - Arn
+      FunctionName:
+        Fn::GetAtt:
+        - ProcessorFunction
+        - Arn
+      BatchSize: 5
+      Enabled: true
+Outputs:
+  ApiUrl:
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/trocas
+  QueueUrl:
+    Value:
+      Ref: ExchangeQueue
+  TopicArn:
+    Value:
+      Ref: ExchangeTopic
+  TableName:
+    Value:
+      Ref: ExchangeTable

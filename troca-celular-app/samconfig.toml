@@ -1,0 +1,13 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "troca-celular-app"
+resolve_s3 = true
+s3_prefix = "troca-celular-app"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
+
+[default.global.parameters]
+region = "us-east-1"
